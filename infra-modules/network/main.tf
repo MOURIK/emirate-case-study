@@ -1,10 +1,4 @@
 
-locals {
-  public_subnet_address_space    = ""
-  private_subnet_a_address_space = ""
-  private_subnet_a_address_space = ""
-}
-
 # Create a VPC
 resource "aws_vpc" "my_vpc" {
   cidr_block = var.vpc_address_space

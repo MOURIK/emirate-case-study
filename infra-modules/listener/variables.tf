@@ -25,6 +25,7 @@ variable "action" {
 variable "tg_arn" {
   description = "The ARN of the TG"
   type = string
+  default = ""
 }
 
 #CERT

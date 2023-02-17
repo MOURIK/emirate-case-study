@@ -14,5 +14,5 @@ variable "target_group_port" {
 
 variable "target_group_protocol" {
     type = string
-    default = HTTP
+    default = "HTTP"
 }

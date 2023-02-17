@@ -8,19 +8,35 @@ inputs:
   environment:
     description: 'name of the environment to create resources in'
     required: true
-  ENV_ID:
-    description: 'environment ID '
+  region:
+    description: 'name of the resource group to create resources in'
     required: true
+  bucket_name:
+    description: 'name of the storage account to store tfstate in'
+    required: true
+  dynamodb_table_name:
+    description: 'name of the container to store tfstate in'
+    required: true
+  encrypted:
+    description: 'whether the bucket is encrypted'
+    required: false
+    default: "true"
+  kms_key_id:
+    description: 'name of the kms key used to encrypt the bucket'
+    required: false
+    default: ""
   layer:
     description: 'name of the layer to run terraform apply in'
     required: true
-
+  working_directory:
+    description: 'root path of tf layers (end without / ") bootstrap : infrastructure/terraform/bootstrap Infra root : infrastructure/terraform/root Infra envs : infrastructure/terraform/envs'
+    required: true
 
 runs:
   using: 'composite'
   steps:
-    - name: Install Terraform
-      uses: hashicorp/setup-terraform@v2
+    - name: Install terrraform
+      uses: hashicorp/setup-terraform@v1
       with:
         terraform_version: ${{ inputs.terraform_version }}
 
@@ -28,18 +44,20 @@ runs:
       shell: bash
       run: |
         terraform init -input=false \
-            -backend-config="resource_group_name=azrg${{ inputs.ENV_ID }}-webapp" \
-            -backend-config="storage_account_name=azst${{ inputs.ENV_ID }}webapp" \
-            -backend-config="container_name=azct${{ inputs.ENV_ID }}webapp" \
-            -backend-config="key=${{ inputs.environment }}/${{ inputs.layer }}.tfstate"
-      working-directory: infra-modules/${{ inputs.layer }}
+            -backend-config="region=${{ inputs.region }}" \
+            -backend-config="bucket=${{ inputs.bucket_name }}" \
+            -backend-config="dynamodb_table=${{ inputs.dynamodb_table_name }}" \
+            -backend-config="encrypt=${{ inputs.encrypted }}" \
+            -backend-config="kms_key_id=${{ inputs.kms_key_id }}" \
+            -backend-config="key=${{ inputs.layer }}.tfstate"
+      working-directory: ${{ inputs.working_directory }}/${{ inputs.layer }}
 
     - name: Terraform validate
       run: terraform validate
       shell: bash
-      working-directory: infra-modules/${{ inputs.layer }}
+      working-directory: ${{ inputs.working_directory }}/${{ inputs.layer }}
 
     - name: Terraform Plan
       shell: bash
-      run: terraform plan -input=false
-      working-directory: infra-modules/${{ inputs.layer }}
+      run: terraform plan -input=false -var-file="../../variables/shared.tfvars" -var-file="../../variables/${{ inputs.environment }}.tfvars"
+      working-directory: ${{ inputs.working_directory }}/${{ inputs.layer }}
