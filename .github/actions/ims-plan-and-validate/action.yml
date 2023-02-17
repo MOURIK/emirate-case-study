@@ -1,0 +1,45 @@
+name: '⭐ Terraform validate & plan composite action'
+description: 'Composite action to run terraform validate & plan command on the given layer'
+
+inputs:
+  terraform_version:
+    description: 'version of terraform to install'
+    required: true
+  environment:
+    description: 'name of the environment to create resources in'
+    required: true
+  ENV_ID:
+    description: 'environment ID '
+    required: true
+  layer:
+    description: 'name of the layer to run terraform apply in'
+    required: true
+
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Terraform Init
+      shell: bash
+      run: |
+        terraform init -input=false \
+            -backend-config="resource_group_name=azrg${{ inputs.ENV_ID }}-webapp" \
+            -backend-config="storage_account_name=azst${{ inputs.ENV_ID }}webapp" \
+            -backend-config="container_name=azct${{ inputs.ENV_ID }}webapp" \
+            -backend-config="key=${{ inputs.environment }}/${{ inputs.layer }}.tfstate"
+      working-directory: infra-modules/${{ inputs.layer }}
+
+    - name: Terraform validate
+      run: terraform validate
+      shell: bash
+      working-directory: infra-modules/${{ inputs.layer }}
+
+    - name: Terraform Plan
+      shell: bash
+      run: terraform plan -input=false
+      working-directory: infra-modules/${{ inputs.layer }}

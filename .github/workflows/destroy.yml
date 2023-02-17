@@ -1,0 +1,13 @@
+name: '👿 Destroy All'
+     
+on:
+  workflow_dispatch:
+  
+jobs:
+  destroy_all_envs:
+     runs-on: ubuntu-20.04
+     steps:
+     - name: '🌈'
+       run: echo ...
+  
+

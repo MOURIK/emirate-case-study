@@ -1,0 +1,39 @@
+name: '🚀 Terraform apply composite action'
+description: 'Composite action to run terraform apply command on the given layer'
+
+inputs:
+  terraform_version:
+    description: 'version of terraform to install'
+    required: true
+  environment:
+    description: 'name of the environment to create resources in'
+    required: true
+  ENV_ID:
+    description: 'environment ID '
+    required: true
+  layer:
+    description: 'name of the layer to run terraform apply in'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Terraform Init
+      shell: bash
+      run: |
+        terraform init -input=false \
+            -backend-config="resource_group_name=azrg${{ inputs.ENV_ID }}-ims1-01" \
+            -backend-config="storage_account_name=azst${{ inputs.ENV_ID }}ims101" \
+            -backend-config="container_name=azct${{ inputs.ENV_ID }}ims101" \
+            -backend-config="key=${{ inputs.environment }}/${{ inputs.layer }}.tfstate"
+      working-directory: infrastructure/terraform/${{ inputs.layer }}
+
+    - name: Terraform Apply
+      shell: bash
+      run: terraform apply -auto-approve -var-file="vars/${{ inputs.environment }}.variables.tfvars" -var-file="../variables/shared.variables.tfvars"
+      working-directory: infrastructure/terraform/${{ inputs.layer }}
