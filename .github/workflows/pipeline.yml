@@ -45,6 +45,11 @@ jobs:
           role-session-name: oidcrolesession
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
+      # Run a Terraform fmt
+      - name: Terraform format
+        id: fmt
+        run: terraform fmt -check
+
       - name: terraform plan and validate
         uses: ./.github/actions/tf-plan-and-validate
         with:
