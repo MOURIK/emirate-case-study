@@ -29,3 +29,5 @@ override.tf.json
 # example: *tfplan*
 .DS_Store
 .idea
+# ppt temp file
+~$WebApp_architecture.pptx
